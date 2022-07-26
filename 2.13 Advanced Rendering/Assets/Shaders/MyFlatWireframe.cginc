@@ -1,11 +1,15 @@
 ﻿#if !defined(FLAT_WIREFRAME_INCLUDED)
 #define FLAT_WIREFRAME_INCLUDED
 
-
 #define CUSTOM_GEOMETRY_INTERPOLATORS \
 float2 barycentricCoordinates : TEXCOORD9;
 
 #include "My Lighting Input.cginc"
+
+float3 _WireframeColor;
+float _WireframeSmoothing;
+float _WireframeThickness;
+
 
 //使用重心坐标来描画
 float3 GetAlbedoWithWireframe (Interpolators i) {
@@ -13,10 +17,18 @@ float3 GetAlbedoWithWireframe (Interpolators i) {
     float3 barys;
     barys.xy = i.barycentricCoordinates;
     barys.z = 1 - barys.x - barys.y;
-    albedo = barys;
+
+    float3 deltas = fwidth(barys);
+    float3 smoothing = deltas * _WireframeSmoothing;
+    float3 thickness = deltas * _WireframeThickness;
+    barys = smoothstep(thickness, thickness + smoothing, barys);
     //最小中心坐标
     float minBary = min(barys.x, min(barys.y, barys.z));
-    return albedo * minBary;
+    //float delta = abs(ddx(minBary)) + abs(ddy(minBary));
+    // float delta = fwidth(minBary);
+    // minBary = smoothstep(delta, 2 * delta,minBary);
+    //return albedo * minBary;
+    return lerp(_WireframeColor, albedo, minBary);
 }
 #define ALBEDO_FUNCTION GetAlbedoWithWireframe
 
