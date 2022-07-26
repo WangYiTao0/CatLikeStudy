@@ -14,7 +14,9 @@ float3 GetAlbedoWithWireframe (Interpolators i) {
     barys.xy = i.barycentricCoordinates;
     barys.z = 1 - barys.x - barys.y;
     albedo = barys;
-    return albedo;
+    //最小中心坐标
+    float minBary = min(barys.x, min(barys.y, barys.z));
+    return albedo * minBary;
 }
 #define ALBEDO_FUNCTION GetAlbedoWithWireframe
 
